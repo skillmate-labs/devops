@@ -4,10 +4,8 @@ trigger:
       - main
       - dev
 
-pool:
-  vmImage: 'ubuntu-latest'
-
 variables:
+  vmImageName: 'ubuntu-latest'
   mavenVersion: '3.9.6'
   javaVersion: '17'
   projectName: 'skillmate'
@@ -15,25 +13,30 @@ variables:
 
 stages:
   - stage: Build
-    displayName: 'Build do Projeto'
+    displayName: 'Build e Testes'
     jobs:
-      - job: BuildJob
-        displayName: 'Compilar e Gerar Artefato'
+      - job: BuildAndTest
+        displayName: 'Build, Testar e Publicar Artefatos'
+        pool:
+          vmImage: $(vmImageName)
+        
         steps:
+          - checkout: self
+            displayName: 'Checkout do código'
+
           - task: JavaToolInstaller@0
             displayName: 'Instalar Java 17'
             inputs:
               versionSpec: '17'
               jdkArchitectureOption: 'x64'
-              jdkSource: 'PreInstalled'
+              jdkSourceOption: 'PreInstalled'
 
-          - task: Maven@4
-            displayName: 'Instalar Maven'
+          - task: Bash@3
+            displayName: 'Criar diretório Maven'
             inputs:
-              mavenVersionOption: 'Path'
-              mavenDirectory: '/usr/share/maven'
-              mavenVersion: '$(mavenVersion)'
-              mavenSetM2Home: true
+              targetType: 'inline'
+              script: |
+                mkdir -p $(Pipeline.Workspace)/.m2/repository
 
           - task: Cache@2
             displayName: 'Cache de Dependências Maven'
@@ -41,31 +44,42 @@ stages:
               key: 'maven | "$(Agent.OS)" | pom.xml'
               restoreKeys: |
                 maven | "$(Agent.OS)"
-              path: '$(MAVEN_CACHE_FOLDER)'
-
-          - script: |
-              echo "##vso[task.setvariable variable=MAVEN_CACHE_FOLDER]$(Pipeline.Workspace)/.m2/repository"
-            displayName: 'Configurar Cache Maven'
-
-          - checkout: self
-            displayName: 'Checkout do Código'
+              path: '$(Pipeline.Workspace)/.m2/repository'
 
           - task: Maven@4
-            displayName: 'Build do Projeto (Maven Clean Package)'
+            displayName: 'Restaurar dependências Maven'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'dependency:resolve'
+              options: '-U -Dmaven.repo.local=$(Pipeline.Workspace)/.m2/repository'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.17'
+              jdkArchitectureOption: 'x64'
+
+          - task: Maven@4
+            displayName: 'Build da aplicação'
             inputs:
               mavenPomFile: 'pom.xml'
               goals: 'clean package'
-              options: '-DskipTests'
+              options: '-DskipTests -Dmaven.repo.local=$(Pipeline.Workspace)/.m2/repository'
               mavenOptions: '-Xmx3072m'
               javaHomeOption: 'JDKVersion'
               jdkVersionOption: '1.17'
               jdkArchitectureOption: 'x64'
               publishJUnitResults: false
 
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publicar Artefato JAR'
+          - task: Bash@3
+            displayName: 'Copiar JAR para diretório de staging'
             inputs:
-              pathToPublish: '$(System.DefaultWorkingDirectory)/target/$(projectName)-*.jar'
+              targetType: 'inline'
+              script: |
+                mkdir -p $(Build.ArtifactStagingDirectory)/jar
+                cp $(System.DefaultWorkingDirectory)/target/$(projectName)-*.jar $(Build.ArtifactStagingDirectory)/jar/
+                ls -la $(Build.ArtifactStagingDirectory)/jar/
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publicar artefato de build'
+            inputs:
+              pathToPublish: '$(Build.ArtifactStagingDirectory)/jar'
               artifactName: '$(artifactName)'
               publishLocation: 'Container'
-
