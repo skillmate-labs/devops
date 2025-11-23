@@ -1,0 +1,71 @@
+trigger:
+  branches:
+    include:
+      - main
+      - dev
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  mavenVersion: '3.9.6'
+  javaVersion: '17'
+  projectName: 'skillmate'
+  artifactName: 'skillmate-jar'
+
+stages:
+  - stage: Build
+    displayName: 'Build do Projeto'
+    jobs:
+      - job: BuildJob
+        displayName: 'Compilar e Gerar Artefato'
+        steps:
+          - task: JavaToolInstaller@0
+            displayName: 'Instalar Java 17'
+            inputs:
+              versionSpec: '17'
+              jdkArchitecture: 'x64'
+              jdkSource: 'PreInstalled'
+
+          - task: Maven@4
+            displayName: 'Instalar Maven'
+            inputs:
+              mavenVersionOption: 'Path'
+              mavenDirectory: '/usr/share/maven'
+              mavenVersion: '$(mavenVersion)'
+              mavenSetM2Home: true
+
+          - task: Cache@2
+            displayName: 'Cache de Dependências Maven'
+            inputs:
+              key: 'maven | "$(Agent.OS)" | pom.xml'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
+              path: '$(MAVEN_CACHE_FOLDER)'
+
+          - script: |
+              echo "##vso[task.setvariable variable=MAVEN_CACHE_FOLDER]$(Pipeline.Workspace)/.m2/repository"
+            displayName: 'Configurar Cache Maven'
+
+          - checkout: self
+            displayName: 'Checkout do Código'
+
+          - task: Maven@4
+            displayName: 'Build do Projeto (Maven Clean Package)'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'clean package'
+              options: '-DskipTests'
+              mavenOptions: '-Xmx3072m'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.17'
+              jdkArchitectureOption: 'x64'
+              publishJUnitResults: false
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publicar Artefato JAR'
+            inputs:
+              pathToPublish: '$(System.DefaultWorkingDirectory)/target/$(projectName)-*.jar'
+              artifactName: '$(artifactName)'
+              publishLocation: 'Container'
+
