@@ -24,7 +24,7 @@ stages:
             displayName: 'Instalar Java 17'
             inputs:
               versionSpec: '17'
-              jdkArchitecture: 'x64'
+              jdkArchitectureOption: 'x64'
               jdkSource: 'PreInstalled'
 
           - task: Maven@4
