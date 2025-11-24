@@ -8,7 +8,7 @@ O projeto inclui uma infraestrutura completa de DevOps com CI/CD através do Azu
 
 ## 🎥 Vídeo Demonstrativo
 
-Assista ao vídeo demonstrativo da solução: [SkillMate - Demonstração](https://youtu.be/umZ8lX29vEs)
+Assista ao vídeo demonstrativo da solução: [SkillMate - Demonstração]()
 
 ## 👥 Equipe de Desenvolvimento
 
