@@ -4,11 +4,9 @@
 
 A **Skillmate API** é uma aplicação Spring Boot que expõe APIs RESTful para gestão de usuários, papéis e metas (goals) de aprendizado. O projeto utiliza Oracle Database, autenticação via JWT, cache, paginação, mensageria com RabbitMQ e integração com IA (Ollama) para sugestões inteligentes de metas de aprendizado.
 
-O projeto inclui uma infraestrutura completa de DevOps com CI/CD através do Azure DevOps, containerização Docker, e scripts automatizados para deploy na nuvem Azure.
-
 ## 🎥 Vídeo Demonstrativo
 
-Assista ao vídeo demonstrativo da solução: [SkillMate - Demonstração]()
+Assista ao vídeo demonstrativo da solução: [SkillMate - Demonstração](devops)
 
 ## 👥 Equipe de Desenvolvimento
 
@@ -20,7 +18,6 @@ Assista ao vídeo demonstrativo da solução: [SkillMate - Demonstração]()
 
 ## 🛠️ Tecnologias Utilizadas
 
-### Backend
 - **Java 17**, **Spring Boot 3.5.8**
 - **Spring Web**, **Spring Data JPA** (Oracle)
 - **Spring Security** com **JWT** (jjwt 0.12.3)
@@ -36,17 +33,8 @@ Assista ao vídeo demonstrativo da solução: [SkillMate - Demonstração]()
 - **BCrypt** para hash de senhas
 - **Internacionalização (i18n)** com suporte a múltiplos idiomas
 
-### DevOps e Infraestrutura
-- **Docker** e **Docker Compose** para containerização
-- **Azure DevOps** para CI/CD
-- **Azure Container Registry (ACR)** para armazenamento de imagens
-- **Azure Container Instances** para deploy de containers
-- **Maven 3.9.6** para gerenciamento de dependências e build
-- **Azure CLI** para automação de infraestrutura
-
 ## 📦 Estrutura do Projeto
 
-### Código da Aplicação
 - `com/skillmate/skillmate/modules/*`: domínios (`auth`, `users`, `roles`, `goals`)
   - `controllers`: APIs REST sob `/api/*`
   - `useCases`: casos de uso da aplicação
@@ -56,15 +44,6 @@ Assista ao vídeo demonstrativo da solução: [SkillMate - Demonstração]()
 - `security`: `JwtTokenProvider`, `JwtAuthenticationFilter`
 - `exception`: tratamento global de exceções
 - `resources/messages*.properties`: arquivos de internacionalização
-
-### Arquivos DevOps
-- `Dockerfile`: Imagem Docker multi-stage para produção
-- `compose.yaml`: Docker Compose para desenvolvimento local (RabbitMQ, Ollama)
-- `azure-pipeline.yml`: Pipeline CI/CD do Azure DevOps
-- `scripts/script-infra.sh`: Script automatizado de deploy na Azure
-- `scripts/script-bd.sql`: Script SQL para criação das tabelas
-- `pom.xml`: Configuração Maven com todas as dependências
-- `mvnw` / `mvnw.cmd`: Maven Wrapper para builds sem Maven instalado
 
 ## 🔐 Segurança e Autenticação
 
@@ -103,14 +82,13 @@ Assista ao vídeo demonstrativo da solução: [SkillMate - Demonstração]()
 
 ### Pré-requisitos
 - Java 17
-- Maven 3.6+ (ou use o `mvnw` incluído no projeto)
+- Maven 3.6+
 - Docker e Docker Compose
 - Oracle Database (ou acesso a um)
-- Azure CLI (para deploy na nuvem - opcional)
 
 ### Variáveis de Ambiente
 
-Crie um arquivo `.env` na raiz do projeto para desenvolvimento local:
+Crie um arquivo `.env` na raiz do projeto:
 
 ```bash
 SPRING_DATASOURCE_URL=jdbc:oracle:thin:@<host>:<port>:<sid>
@@ -118,8 +96,6 @@ SPRING_DATASOURCE_USERNAME=<username>
 SPRING_DATASOURCE_PASSWORD=<password>
 SPRING_DATASOURCE_DRIVERCLASSNAME=oracle.jdbc.OracleDriver
 ```
-
-**Nota:** As variáveis de ambiente também podem ser configuradas diretamente no sistema ou através do Azure Container Instances durante o deploy.
 
 ### 🐳 Iniciar Serviços com Docker Compose
 
@@ -156,31 +132,18 @@ Após iniciar o Ollama, baixe o modelo necessário:
 
 ### 🚀 Executar a Aplicação
 
-#### Desenvolvimento Local
-
 1. **Clone o repositório:**
    ```bash
    git clone <seu-repositorio>
-   cd devops
+   cd java
    ```
 
 2. **Configure o `.env`** (veja seção anterior)
 
 3. **Inicie os serviços** (RabbitMQ e Ollama) com Docker Compose (veja seção anterior)
 
-4. **Execute o script SQL** para criar as tabelas no banco de dados:
+4. **Compile e execute:**
    ```bash
-   # Conecte-se ao Oracle e execute:
-   sqlplus <usuario>/<senha>@<host>:<port>/<sid> @scripts/script-bd.sql
-   ```
-
-5. **Compile e execute:**
-   ```bash
-   # Usando Maven Wrapper (recomendado)
-   ./mvnw clean compile
-   ./mvnw spring-boot:run
-   
-   # Ou usando Maven instalado
    mvn clean compile
    mvn spring-boot:run
    ```
@@ -190,25 +153,6 @@ A aplicação estará disponível em `http://localhost:8080`
 **Configurações adicionais:**
 - JWT Secret: configurado em `application.properties` (use variável de ambiente em produção)
 - Todas as configurações estão em `src/main/resources/application.properties`
-
-#### Executar com Docker
-
-1. **Build da imagem:**
-   ```bash
-   docker build -t skillmate:latest .
-   ```
-
-2. **Execute o container:**
-   ```bash
-   docker run -p 8080:8080 \
-     -e SPRING_DATASOURCE_URL=jdbc:oracle:thin:@<host>:<port>:<sid> \
-     -e SPRING_DATASOURCE_USERNAME=<username> \
-     -e SPRING_DATASOURCE_PASSWORD=<password> \
-     -e SPRING_DATASOURCE_DRIVERCLASSNAME=oracle.jdbc.OracleDriver \
-     -e SPRING_RABBITMQ_HOST=<rabbitmq-host> \
-     -e SPRING_AI_OLLAMA_BASE_URL=http://<ollama-host>:11434 \
-     skillmate:latest
-   ```
 
 ## 🔑 Fluxo de Autenticação
 
@@ -282,6 +226,104 @@ curl -X POST http://localhost:8080/api/goals/ai-suggestion \
 
 **Nota:** Requer o modelo Ollama `llama3.2:3b` configurado (veja seção "Configurar Modelo Ollama").
 
+## 🧪 Exemplos de Testes
+
+Esta seção contém exemplos práticos de requisições HTTP utilizadas para testar a API. Os exemplos abaixo foram executados contra um ambiente de produção em `http://4.239.133.229:8080`.
+
+### 👥 Testes de Usuários
+
+#### Criar Usuário (POST)
+```http
+POST http://4.239.133.229:8080/api/users/register
+Content-Type: application/json
+
+{
+  "name": "Ian Devops",
+  "email": "ian.devops@example.com",
+  "password": "senha123",
+  "roleId": "ysyrbingirour0g41khpcgd8"
+}
+```
+
+#### Listar Usuários (GET)
+```http
+GET http://4.239.133.229:8080/api/users?size=100
+Authorization: Bearer <token>
+```
+
+#### Atualizar Usuário (PUT)
+```http
+PUT http://4.239.133.229:8080/api/users/7da1e6d2652549cb91eb3ce5
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "name": "Ian Devops Edit",
+  "email": "ian.devops@example.com",
+  "password": "senha123",
+  "roleId": "ysyrbingirour0g41khpcgd8"
+}
+```
+
+#### Excluir Usuário (DELETE)
+```http
+DELETE http://4.239.133.229:8080/api/users/7da1e6d2652549cb91eb3ce5
+Authorization: Bearer <token>
+```
+
+### 🔑 Testes de Autenticação
+
+#### Login (POST)
+```http
+POST http://4.239.133.229:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ian.devops@example.com",
+  "password": "senha123"
+}
+```
+
+### 🎭 Testes de Papéis (Roles)
+
+#### Listar Papéis (GET)
+```http
+GET http://4.239.133.229:8080/api/roles
+Authorization: Bearer <token>
+```
+
+#### Criar Papel (POST)
+```http
+POST http://4.239.133.229:8080/api/roles
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "name": "Devops Vídeo",
+  "acronym": "DVPV"
+}
+```
+
+#### Atualizar Papel (PUT)
+```http
+PUT http://4.239.133.229:8080/api/roles/569b3b228cd242d19513f3c3
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "name": "Devops Vídeo Edit",
+  "acronym": "DVPV"
+}
+```
+
+#### Excluir Papel (DELETE)
+```http
+DELETE http://4.239.133.229:8080/api/roles/569b3b228cd242d19513f3c3
+Authorization: Bearer <token>
+```
+
+**Nota:** Para endpoints protegidos, substitua `<token>` pelo JWT retornado no login.
+
 ## 🌍 Internacionalização (i18n)
 
 O projeto suporta múltiplos idiomas através dos arquivos de propriedades:
@@ -315,178 +357,6 @@ As mensagens de validação e erros são traduzidas automaticamente baseadas no 
 - Integração com Ollama via Spring AI
 - Modelo `llama3.2:3b` para sugestões de metas
 - Sugestões personalizadas baseadas em experiência e habilidade
-
-## 🔄 CI/CD e DevOps
-
-### Azure DevOps Pipeline
-
-O projeto inclui um pipeline de CI/CD configurado no Azure DevOps (`azure-pipeline.yml`) que:
-
-- **Trigger:** Executa automaticamente em commits nas branches `main` e `dev`
-- **Build:** Compila o projeto Maven com Java 17
-- **Cache:** Utiliza cache de dependências Maven para otimizar builds
-- **Artefatos:** Gera e publica o JAR da aplicação como artefato
-
-**Configuração do Pipeline:**
-- **VM Image:** `ubuntu-latest`
-- **Java Version:** 17
-- **Maven Version:** 3.9.6
-- **Artefato:** `skillmate-jar` (contém o JAR compilado)
-
-Para configurar o pipeline no Azure DevOps:
-1. Conecte seu repositório ao Azure DevOps
-2. Crie um novo pipeline e selecione o arquivo `azure-pipeline.yml`
-3. O pipeline será executado automaticamente em cada push
-
-### Deploy na Azure
-
-O projeto inclui um script automatizado (`scripts/script-infra.sh`) para deploy completo da infraestrutura na Azure:
-
-#### Recursos Criados:
-- **Resource Group:** `rg-skillmate` (região: Canada Central)
-- **Azure Container Registry (ACR):** Para armazenar imagens Docker
-- **Azure Container Instances:**
-  - Oracle Database (gvenzl/oracle-xe)
-  - RabbitMQ (com Management UI)
-  - Ollama (serviço de IA)
-  - Skillmate API (aplicação principal)
-
-#### Executar Deploy:
-
-1. **Instale o Azure CLI:**
-   ```bash
-   # macOS
-   brew install azure-cli
-   
-   # Ou baixe de: https://aka.ms/installazurecliwindows
-   ```
-
-2. **Execute o script de infraestrutura:**
-   ```bash
-   cd scripts
-   chmod +x script-infra.sh
-   ./script-infra.sh
-   ```
-
-3. **O script irá:**
-   - Fazer login no Azure
-   - Criar o Resource Group
-   - Criar o Azure Container Registry
-   - Build e push da imagem Docker
-   - Deploy de todos os containers
-   - Configurar variáveis de ambiente automaticamente
-   - Exibir os IPs públicos de cada serviço
-
-**Tempo estimado:** 15-20 minutos (incluindo inicialização do Oracle)
-
-#### Variáveis de Ambiente no Deploy
-
-O script configura automaticamente todas as variáveis necessárias:
-- Conexão com Oracle Database
-- Configuração do RabbitMQ
-- URL do Ollama
-- JWT Secret e expiração
-- Portas e hosts dos serviços
-
-#### Acessar Serviços Após Deploy
-
-Após o deploy, o script exibirá os IPs públicos. Acesse:
-- **API:** `http://<API_IP>:8080`
-- **RabbitMQ Management:** `http://<RABBITMQ_IP>:15672` (guest/guest)
-- **Ollama:** `http://<OLLAMA_IP>:11434`
-- **Oracle:** `<ORACLE_IP>:1521`
-
-### Docker
-
-#### Dockerfile
-
-O projeto inclui um `Dockerfile` multi-stage que:
-- **Stage 1 (Build):** Usa `maven:3.9.6-eclipse-temurin-17` para compilar
-- **Stage 2 (Runtime):** Usa `eclipse-temurin:17-jre` para executar
-- **Otimizações:** Configurações de memória para containers
-- **Porta:** Expõe a porta 8080
-
-#### Docker Compose (Desenvolvimento)
-
-O `compose.yaml` inclui serviços para desenvolvimento local:
-- **RabbitMQ:** Com interface de gerenciamento
-- **Ollama:** Para sugestões de IA
-
-**Uso:**
-```bash
-# Iniciar serviços
-docker compose up -d
-
-# Parar serviços
-docker compose down
-
-# Ver logs
-docker compose logs -f
-```
-
-### Scripts de Banco de Dados
-
-O arquivo `scripts/script-bd.sql` contém o DDL completo para criação das tabelas:
-- `roles` - Papéis de usuários
-- `users` - Usuários do sistema
-- `goals` - Metas de aprendizado
-- `weekly_plans` - Planos semanais
-- `tasks` - Tarefas dos planos
-- `references` - Referências de aprendizado
-
-**Executar:**
-```bash
-sqlplus <usuario>/<senha>@<host>:<port>/<sid> @scripts/script-bd.sql
-```
-
-## 📊 Monitoramento e Observabilidade
-
-### Health Checks
-
-A aplicação expõe endpoints do Spring Actuator para monitoramento:
-- **Health:** `http://localhost:8080/actuator/health`
-- **Info:** `http://localhost:8080/actuator/info`
-- **Metrics:** `http://localhost:8080/actuator/metrics`
-
-### Logs
-
-No Azure Container Instances, visualize os logs:
-```bash
-# Logs da API
-az container logs --resource-group rg-skillmate --name skillmate-api --follow
-
-# Logs do Oracle
-az container logs --resource-group rg-skillmate --name oracle-db --follow
-
-# Logs do RabbitMQ
-az container logs --resource-group rg-skillmate --name rabbitmq --follow
-
-# Logs do Ollama
-az container logs --resource-group rg-skillmate --name ollama --follow
-```
-
-## 🔧 Troubleshooting
-
-### Problemas Comuns
-
-1. **Oracle não inicia:**
-   - Aguarde 5-10 minutos após o deploy
-   - Verifique os logs: `az container logs --resource-group rg-skillmate --name oracle-db`
-
-2. **API não conecta ao banco:**
-   - Verifique se o Oracle está pronto
-   - Confirme o IP e porta do Oracle
-   - Verifique as variáveis de ambiente no container da API
-
-3. **Ollama não responde:**
-   - Aguarde alguns minutos após o deploy
-   - Verifique se o modelo foi baixado: `docker compose exec ollama ollama list`
-   - Baixe o modelo manualmente se necessário
-
-4. **Build do pipeline falha:**
-   - Verifique se o Java 17 está configurado corretamente
-   - Confirme que o `pom.xml` está válido
-   - Verifique os logs do pipeline no Azure DevOps
 
 ## 📄 Licença
 
