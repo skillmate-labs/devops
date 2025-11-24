@@ -6,7 +6,7 @@ A **Skillmate API** é uma aplicação Spring Boot que expõe APIs RESTful para 
 
 ## 🎥 Vídeo Demonstrativo
 
-Assista ao vídeo demonstrativo da solução: [SkillMate - Demonstração](devops)
+Assista ao vídeo demonstrativo da solução: [SkillMate - Demonstração](https://youtu.be/pITGGdg0LCQ)
 
 ## 👥 Equipe de Desenvolvimento
 
